@@ -2,7 +2,7 @@
 import type { LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { summarizeTranscript } from "~/services/openai";
-import { fetchVideoInfo, fetchTranscript } from "~/services/youtube";
+import { fetchMetadata, fetchTranscript } from "~/services/youtube";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const url = new URL(request.url);
@@ -16,13 +16,26 @@ export const loader: LoaderFunction = async ({ request }) => {
   }
 
   try {
-    const videoInfo = await fetchVideoInfo(videoId, false);
+    const [metadata, transcript] = await Promise.all([
+      fetchMetadata(videoId, false),
+      fetchTranscript(videoId, false),
+    ]);
+    const summary = await summarizeTranscript(
+      transcript.join(" "),
+      metadata,
+      true
+    );
 
-    console.log({ videoInfo });
-    const transcript = await fetchTranscript(videoId, false);
-    const summary = await summarizeTranscript(transcript.join(" "), videoInfo);
-
-    return json({ summary });
+    return json({
+      summary,
+      metadata: {
+        title: metadata.title,
+        imageUrl: metadata.imageUrl,
+        author: metadata.author,
+        avatar: metadata.avatar,
+        publishedDate: metadata.publishedDate,
+      },
+    });
   } catch (error: any) {
     console.error(
       `Error processing transcript for Video ID ${videoId}:`,

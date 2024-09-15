@@ -29,7 +29,7 @@ export const mockMetaData = {
     "Download the FREE 9-page Cognitive Enhancement Blueprint: \n" +
     "https://bdnfprotocols.com/",
   author: "FoundMyFitness Clips",
-  authorAvatar:
+  avatar:
     "https://yt3.ggpht.com/ytc/AIdro_nGdvvRnZAWFImxb0EntQcu_f5S194qrkmla3FuZDCJiQ=s176-c-k-c0x00ffffff-no-rj",
   keywords: ["muscle", "bulking diet", "bulking tips", "bulking on a budget"],
   imageUrl:

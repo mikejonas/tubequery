@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import Logo from "~/components/Logo";
 import { Button } from "~/components/ui/button";
-import { ArrowUp, Menu, Loader2, Clock, Volume2 } from "lucide-react";
+import { ArrowUp, Loader2, Clock, Volume2 } from "lucide-react";
 import { useParams } from "@remix-run/react";
 import Markdown from "~/components/Markdown";
 import { mockResponse } from "~/data";
 import { useQuery } from "@tanstack/react-query";
-
-function estimateReadingTime(text: string): number {
-  const wordsPerMinute = 200;
-  const wordCount = text.split(/\s+/).length;
-  return Math.ceil(wordCount / wordsPerMinute);
-}
+import VideoPlayer from "~/components/VideoPlayer";
+import { estimateReadingTime } from "~/utils";
+import Header from "~/components/Header";
 
 export default function Result() {
   const [question, setQuestion] = useState("");
@@ -85,33 +81,10 @@ export default function Result() {
     }
   };
 
-  const renderHeader = () => (
-    <header className="flex justify-between items-center mb-8">
-      <Logo />
-      <button className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">
-        <Menu className="w-6 h-6" />
-      </button>
-    </header>
-  );
-
-  const renderVideoPlayer = () => (
-    <div className="mb-6 aspect-video">
-      <iframe
-        src={`https://www.youtube-nocookie.com/embed/${videoId}?controls=1&rel=0`}
-        title="YouTube video player"
-        frameBorder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        className="w-full h-full"
-      ></iframe>
-    </div>
-  );
-
   const renderSummary = () => (
-    <>
+    <div>
       <div className="mb-4">
         <h2 className="text-2xl font-semibold flex items-center mb-2">
-          <span className="w-0.5 h-6 bg-red-500 mr-3"></span>
           Exercise Scientist Critiques Ronnie Coleman
         </h2>
         <div className="flex items-center text-sm text-zinc-500 dark:text-zinc-400 space-x-4">
@@ -136,7 +109,7 @@ export default function Result() {
           <Markdown>{summary}</Markdown>
         </div>
       )}
-    </>
+    </div>
   );
 
   const renderQuestion = (question: string) => {
@@ -193,16 +166,14 @@ export default function Result() {
   );
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-sans">
+    <div className="flex flex-col">
+      <Header />
       <div className="flex-grow overflow-y-auto pb-24" ref={chatContainerRef}>
-        <div className="max-w-2xl mx-auto p-6">
-          {renderHeader()}
-          <main className="bg-white dark:bg-zinc-900 rounded-lg">
-            {renderVideoPlayer()}
-            {renderSummary()}
-            {renderChat()}
-          </main>
-        </div>
+        <main className="max-w-2xl mx-auto p-6">
+          <VideoPlayer videoId={videoId ?? ""} />
+          {renderSummary()}
+          {renderChat()}
+        </main>
       </div>
       <div className="fixed bottom-0 left-0 right-0 py-4">
         <div className="max-w-2xl mx-auto">{renderChatInput()}</div>

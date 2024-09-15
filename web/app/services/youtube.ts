@@ -2,12 +2,13 @@ import { decode } from "html-entities";
 import ytdl from "@distube/ytdl-core";
 import { YoutubeTranscript } from "youtube-transcript";
 import { mockMetaData, mockTranscript } from "~/data";
-export interface VideoInfo {
+
+export interface Metadata {
   title: string;
   description: string;
   author: string;
   authorId?: string;
-  authorAvatar?: string;
+  avatar?: string;
   keywords?: string[];
   imageUrl?: string;
   publishedDate?: string;
@@ -16,10 +17,10 @@ export interface VideoInfo {
   isLive?: boolean;
 }
 
-export async function fetchVideoInfo(
+export async function fetchMetadata(
   videoId: string,
   returnMock: boolean
-): Promise<VideoInfo> {
+): Promise<Metadata> {
   if (returnMock) {
     return mockMetaData;
   }
@@ -29,7 +30,7 @@ export async function fetchVideoInfo(
 
   const videoDetails = ytdlInfo.videoDetails;
   const author = videoDetails.author;
-  const authorAvatar =
+  const avatar =
     author && author.thumbnails && author.thumbnails.length > 0
       ? author.thumbnails[author.thumbnails.length - 1].url
       : ""; // Getting the highest resolution avatar
@@ -38,7 +39,7 @@ export async function fetchVideoInfo(
     title: videoDetails.title || "Unknown Title",
     description: videoDetails.description || "No description available",
     author: author.name || "Unknown Author",
-    authorAvatar,
+    avatar,
     keywords: videoDetails.keywords || [],
     imageUrl: videoDetails.thumbnails?.[0]?.url || "",
     publishedDate: videoDetails.publishDate || "",

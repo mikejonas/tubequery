@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { mockResponse } from "~/data";
 import { VideoInfo } from "~/services/youtube";
 
 const openai = new OpenAI({
@@ -49,9 +50,12 @@ ${transcript}
 
 export async function summarizeTranscript(
   transcript: string,
-  videoInfo: VideoInfo
+  videoInfo: VideoInfo,
+  returnMock: boolean
 ): Promise<string> {
-  console.log(userPrompt(transcript, videoInfo));
+  if (returnMock) {
+    return mockResponse[0];
+  }
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [

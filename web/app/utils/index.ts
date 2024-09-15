@@ -3,3 +3,9 @@ export const extractVideoId = (url: string): string | null => {
   const match = url.match(regExp);
   return match && match[2].length === 11 ? match[2] : null;
 };
+
+export const estimateReadingTime = (text: string): number => {
+  const wordsPerMinute = 200;
+  const wordCount = text.split(/\s+/).length;
+  return Math.ceil(wordCount / wordsPerMinute);
+};

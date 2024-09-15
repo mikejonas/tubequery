@@ -3,9 +3,10 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { useNavigate } from "@remix-run/react";
-import Logo from "~/components/Logo";
-import { Menu, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { extractVideoId } from "~/utils";
+import Header from "~/components/Header";
+import Footer from "~/components/Footer";
 
 export default function Index() {
   const [url, setUrl] = useState("");
@@ -29,52 +30,38 @@ export default function Index() {
     }
   };
 
-  const currentYear = new Date().getFullYear();
-
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-sans">
-      <div className="flex-grow">
-        <div className="max-w-2xl mx-auto p-6">
-          <header className="flex justify-between items-center mb-16">
-            <Logo />
-            <button className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">
-              <Menu className="w-6 h-6" />
-            </button>
-          </header>
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="max-w-2xl mx-auto w-full p-6 text-center">
+        <h1 className="text-3xl font-medium mb-6">
+          Summarize and Query YouTube Videos
+        </h1>
+        <p className="text-xl text-zinc-600 dark:text-zinc-400 mb-12">
+          Enter a YouTube URL to get started
+        </p>
 
-          <main className="text-center">
-            <h1 className="text-3xl font-medium mb-6">
-              Summarize and Query YouTube Videos
-            </h1>
-            <p className="text-xl text-zinc-600 dark:text-zinc-400 mb-12">
-              Enter a YouTube URL to get started
-            </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            ref={inputRef}
+            type="url"
+            placeholder="https://www.youtube.com/watch?v=..."
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            required
+            className="text-lg py-6 dark:bg-zinc-800 dark:text-white"
+          />
+          <Button
+            type="submit"
+            className="w-full py-6 text-lg dark:bg-blue-600 dark:hover:bg-blue-700"
+          >
+            Generate Summary
+            <ArrowRight className="ml-2 w-5 h-5" />
+          </Button>
+        </form>
+      </main>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                ref={inputRef}
-                type="url"
-                placeholder="https://www.youtube.com/watch?v=..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                required
-                className="text-lg py-6 dark:bg-zinc-800 dark:text-white"
-              />
-              <Button
-                type="submit"
-                className="w-full py-6 text-lg dark:bg-blue-600 dark:hover:bg-blue-700"
-              >
-                Generate Summary
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </form>
-          </main>
-        </div>
-      </div>
-
-      <footer className="mt-auto py-6 text-center text-zinc-600 dark:text-zinc-400">
-        <p>&copy; {currentYear} TubeQuery. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
