@@ -1,7 +1,8 @@
-// app/routes/api/getTranscript.ts
+// app/routes/api/summarizeTranscript.ts
 import type { LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { fetchTranscript } from "~/services/youtube";
+import { summarizeTranscript } from "~/services/openai";
+import { fetchVideoInfo, fetchTranscript } from "~/services/youtube";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const url = new URL(request.url);
@@ -15,17 +16,20 @@ export const loader: LoaderFunction = async ({ request }) => {
   }
 
   try {
-    const transcript = await fetchTranscript(videoId, true);
-    // console.log({ transcript });
-    return json(transcript);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const videoInfo = await fetchVideoInfo(videoId, false);
+
+    console.log({ videoInfo });
+    const transcript = await fetchTranscript(videoId, false);
+    const summary = await summarizeTranscript(transcript.join(" "), videoInfo);
+
+    return json({ summary });
   } catch (error: any) {
     console.error(
-      `Error fetching transcript for Video ID ${videoId}:`,
+      `Error processing transcript for Video ID ${videoId}:`,
       error.message || error
     );
 
-    // Handle specific errors (e.g., transcript not available)
+    // Handle specific errors
     if (error.message.includes("No transcript available")) {
       return json(
         { error: "Transcript not available for this video." },
@@ -34,6 +38,6 @@ export const loader: LoaderFunction = async ({ request }) => {
     }
 
     // Generic server error
-    return json({ error: "Failed to fetch transcript." }, { status: 500 });
+    return json({ error: "Failed to process transcript." }, { status: 500 });
   }
 };
