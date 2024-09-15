@@ -22,7 +22,9 @@ export default function Result() {
     queryFn: () =>
       fetch(`/api/summary?videoId=${videoId}`).then((res) => res.json()),
   });
+
   const summary = query?.data?.summary || "";
+  const metadata = query?.data?.metadata || {};
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -81,29 +83,32 @@ export default function Result() {
     }
   };
 
+  const renderTitle = () => (
+    <div>
+      <h1 className="text-xl font-semibold flex items-center mb-2">
+        {metadata.title}
+      </h1>
+      <div className="flex items-center text-sm text-zinc-500 dark:text-zinc-400 space-x-4">
+        <div className="flex items-center">
+          <Clock className="w-4 h-4 mr-1" />
+          <span>{estimateReadingTime(summary)} min read</span>
+        </div>
+        <button
+          onClick={() => {
+            /* Implement audio playback logic */
+          }}
+          className="flex items-center text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          aria-label="Listen to summary"
+        >
+          <Volume2 className="w-4 h-4 mr-1" />
+          <span>Listen</span>
+        </button>
+      </div>
+    </div>
+  );
+
   const renderSummary = () => (
     <div>
-      <div className="mb-4">
-        <h2 className="text-2xl font-semibold flex items-center mb-2">
-          Exercise Scientist Critiques Ronnie Coleman
-        </h2>
-        <div className="flex items-center text-sm text-zinc-500 dark:text-zinc-400 space-x-4">
-          <div className="flex items-center">
-            <Clock className="w-4 h-4 mr-1" />
-            <span>{estimateReadingTime(summary)} min read</span>
-          </div>
-          <button
-            onClick={() => {
-              /* Implement audio playback logic */
-            }}
-            className="flex items-center text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-            aria-label="Listen to summary"
-          >
-            <Volume2 className="w-4 h-4 mr-1" />
-            <span>Listen</span>
-          </button>
-        </div>
-      </div>
       {summary && (
         <div className="space-y-6">
           <Markdown>{summary}</Markdown>
@@ -170,6 +175,7 @@ export default function Result() {
       <Header />
       <div className="flex-grow overflow-y-auto pb-24" ref={chatContainerRef}>
         <main className="max-w-2xl mx-auto p-6">
+          <div className="mb-4">{renderTitle()}</div>
           <VideoPlayer videoId={videoId ?? ""} />
           {renderSummary()}
           {renderChat()}

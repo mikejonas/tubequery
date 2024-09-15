@@ -1,4 +1,3 @@
-// app/routes/api/summarizeTranscript.ts
 import type { LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { summarizeTranscript } from "~/services/openai";
@@ -23,7 +22,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     const summary = await summarizeTranscript(
       transcript.join(" "),
       metadata,
-      true
+      false
     );
 
     return json({
@@ -36,14 +35,17 @@ export const loader: LoaderFunction = async ({ request }) => {
         publishedDate: metadata.publishedDate,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error(
       `Error processing transcript for Video ID ${videoId}:`,
-      error.message || error
+      error instanceof Error ? error.message : error
     );
 
     // Handle specific errors
-    if (error.message.includes("No transcript available")) {
+    if (
+      error instanceof Error &&
+      error.message.includes("No transcript available")
+    ) {
       return json(
         { error: "Transcript not available for this video." },
         { status: 404 }

@@ -53,7 +53,7 @@ export default function Index() {
           />
           <Button
             type="submit"
-            className="w-full py-6 text-lg dark:bg-blue-600 dark:hover:bg-blue-700"
+            className="w-full py-6 text-lg dark:bg-zinc-200 dark:hover:bg-zinc-300"
           >
             Generate Summary
             <ArrowRight className="ml-2 w-5 h-5" />
