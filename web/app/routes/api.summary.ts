@@ -22,7 +22,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     const summary = await summarizeTranscript(
       transcript.join(" "),
       metadata,
-      false
+      true
     );
 
     return json({
