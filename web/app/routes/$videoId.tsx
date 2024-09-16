@@ -8,14 +8,16 @@ import { useQuery } from "@tanstack/react-query";
 import VideoPlayer from "~/components/VideoPlayer";
 import { estimateReadingTime } from "~/utils";
 import Header from "~/components/Header";
+import { VideoProvider, useVideoContext } from "~/context/VideoContext";
 
-export default function Result() {
+const ResultContent = () => {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [chat, setChat] = useState<{ question: string; answer: string }[]>([]);
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { videoId } = useParams();
+  const { seekTo } = useVideoContext();
 
   const query = useQuery({
     queryKey: ["summary", videoId],
@@ -176,7 +178,7 @@ export default function Result() {
       <div className="flex-grow overflow-y-auto pb-24" ref={chatContainerRef}>
         <main className="max-w-2xl mx-auto p-6">
           <div className="mb-4">{renderTitle()}</div>
-          <VideoPlayer videoId={videoId ?? ""} />
+          <VideoPlayer videoId={videoId ?? ""} seekTo={seekTo} />
           {renderSummary()}
           {renderChat()}
         </main>
@@ -185,5 +187,13 @@ export default function Result() {
         <div className="max-w-2xl mx-auto">{renderChatInput()}</div>
       </div>
     </div>
+  );
+};
+
+export default function Result() {
+  return (
+    <VideoProvider>
+      <ResultContent />
+    </VideoProvider>
   );
 }

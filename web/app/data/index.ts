@@ -6,15 +6,15 @@ export const mockResponse = [
 
 1. **Prioritization is essential.**
    
-   Using tools like the Eisenhower Matrix can help categorize tasks based on urgency and importance.
+   Using tools like the Eisenhower Matrix can help categorize tasks based on urgency and importance.[0:30]
 
-2. **Setting SMART goals** (Specific, Measurable, Achievable, Relevant, and Time-bound) can clarify objectives and help track progress.
+2. **Setting SMART goals** (Specific, Measurable, Achievable, Relevant, and Time-bound) can clarify objectives and help track progress.[1:15]
 
 3. **Planning and scheduling**, including daily and weekly planning, can maintain focus and accountability. Digital tools and calendars are particularly useful for this.
 
-4. **Overcoming procrastination** is a significant aspect of time management. Techniques like breaking tasks into smaller steps and using the Pomodoro Technique can be effective.
+4. **Overcoming procrastination** is a significant aspect of time management. Techniques like breaking tasks into smaller steps and using the Pomodoro Technique can be effective.[2:00]
 
-5. **Effective time management** can lead to reduced stress levels and improved decision-making abilities.
+5. **Effective time management** can lead to reduced stress levels and improved decision-making abilities. [2:45]
 
 Remember, developing good time management skills is an ongoing process. It requires consistent effort and may need adjustments as your circumstances change.`,
 ];
