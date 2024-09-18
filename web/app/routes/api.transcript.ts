@@ -15,9 +15,8 @@ export const loader: LoaderFunction = async ({ request }) => {
   }
 
   try {
-    const transcript = await fetchTranscript(videoId, true);
-    // console.log({ transcript });
-    return json(transcript);
+    const transcript = await fetchTranscript(videoId);
+    return transcript;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error(

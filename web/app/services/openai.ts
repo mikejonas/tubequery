@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 import { mockResponse } from "~/data";
-import { VideoInfo } from "~/services/youtube";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -37,19 +36,25 @@ Whales are remarkable marine mammals that play a vital role in ocean ecosystems.
 This structure should be used to ensure that your summaries are clear, detailed, and include appropriate timestamps from the transcript.
 `;
 
-const userPrompt = (transcript: string, metadata: VideoInfo) => `
+interface VideoInfo {
+  transcript: string;
+  title: string;
+  author: string;
+  description: string;
+}
+
+const userPrompt = ({ transcript, title, author, description }: VideoInfo) => `
 Please summarize the following YouTube video transcript:
 
-Title: ${metadata.title}
-Author: ${metadata.author}
-Description: ${metadata.description}
+Title: ${title}
+Author: ${author}
+Description: ${description}
 
 Transcript:
 ${transcript}
 `;
 
 export async function summarizeTranscript(
-  transcript: string,
   videoInfo: VideoInfo,
   returnMock: boolean
 ): Promise<string> {
@@ -60,7 +65,10 @@ export async function summarizeTranscript(
     model: "gpt-4o-mini",
     messages: [
       { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt(transcript, videoInfo) },
+      {
+        role: "user",
+        content: userPrompt(videoInfo),
+      },
     ],
     max_tokens: 1000,
     temperature: 0.7,
