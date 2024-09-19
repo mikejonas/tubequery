@@ -10,32 +10,39 @@ import { estimateReadingTime } from "~/utils";
 import Header from "~/components/Header";
 import { VideoProvider, useVideoContext } from "~/context/VideoContext";
 import { StreamingSummary } from "~/components/Stream";
+import { Tables } from "~/types/supabase";
+
+type VideoData = Tables<"video">;
+type ChannelData = Tables<"channel">;
+type SummaryData = Tables<"summary"> | undefined;
+
+type OverviewData = {
+  metadata: VideoData & {
+    channel: ChannelData;
+    summary?: SummaryData;
+  };
+};
 
 const ResultContent = () => {
   const [question, setQuestion] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [responding, setResponding] = useState(false);
   const [chat, setChat] = useState<{ question: string; answer: string }[]>([]);
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { videoId } = useParams() as { videoId: string };
   const { seekTo } = useVideoContext();
 
-  const overviewQuery = useQuery({
+  const { data, isLoading } = useQuery<OverviewData, Error>({
     queryKey: ["overview", videoId],
     queryFn: () =>
       fetch(`/api/overview?videoId=${videoId}`).then((res) => res.json()),
   });
 
-  const summaryQuery = useQuery({
-    queryKey: ["summary", videoId],
-    queryFn: () =>
-      fetch(`/api/summary?videoId=${videoId}`).then((res) => res.json()),
-  });
+  const overview = data?.metadata;
+  const summary = data?.metadata.summary;
 
-  const summary = summaryQuery.data?.summary;
-  const overview = overviewQuery.data?.overview || {};
   const chatContainerRef = useRef<HTMLDivElement>(null);
-
+  console.log({});
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -56,7 +63,7 @@ const ResultContent = () => {
   const handleQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim()) return;
-    setLoading(true);
+    setResponding(true);
     const currentQuestion = question;
     setPendingQuestion(currentQuestion);
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -81,7 +88,7 @@ const ResultContent = () => {
       await new Promise((resolve) => setTimeout(resolve, delayBetweenChunks));
     }
 
-    setLoading(false);
+    setResponding(false);
     setPendingQuestion(null);
   };
 
@@ -95,12 +102,14 @@ const ResultContent = () => {
   const renderTitle = () => (
     <div>
       <h1 className="text-xl font-semibold flex items-center mb-2">
-        {overview.title}
+        {overview?.title}
       </h1>
       <div className="flex items-center text-sm text-zinc-500 dark:text-zinc-400 space-x-4">
         <div className="flex items-center">
           <Clock className="w-4 h-4 mr-1" />
-          {summary && <span>{estimateReadingTime(summary)} min read</span>}
+          {summary && (
+            <span>{estimateReadingTime(summary.summary_text)} min read</span>
+          )}
         </div>
         <button
           onClick={() => {
@@ -117,14 +126,12 @@ const ResultContent = () => {
   );
 
   const renderSummary = () => {
-    console.log({ summary });
     if (summary) {
-      console.log(summary);
       return (
         <div>
           {summary && (
             <div className="space-y-6">
-              <Markdown>{summary}</Markdown>
+              <Markdown>{summary.summary_text}</Markdown>
             </div>
           )}
         </div>
@@ -174,11 +181,11 @@ const ResultContent = () => {
       />
       <Button
         type="submit"
-        disabled={loading}
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 bg-transparent p-0"
+        disabled={responding}
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
         aria-label="Submit question"
       >
-        {loading ? (
+        {responding ? (
           <Loader2 className="w-5 h-5 animate-spin" />
         ) : (
           <ArrowUp className="w-5 h-5" />
@@ -195,7 +202,7 @@ const ResultContent = () => {
         <main className="max-w-2xl mx-auto p-6">
           <div className="mb-4">{renderTitle()}</div>
           <VideoPlayer videoId={videoId ?? ""} seekTo={seekTo} />
-          {renderSummary()}
+          {isLoading ? <div>Loading!</div> : renderSummary()}
           {renderChat()}
         </main>
       </div>

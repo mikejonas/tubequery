@@ -57,14 +57,9 @@ ${transcript}
 export async function summarizeTranscript(
   videoInfo: VideoInfo,
   returnMock: boolean
-): Promise<ReadableStream> {
+): Promise<string> {
   if (returnMock) {
-    return new ReadableStream({
-      start(controller) {
-        controller.enqueue(mockResponse[0]);
-        controller.close();
-      },
-    });
+    return mockResponse[0];
   }
 
   const stream = await openai.chat.completions.create({
@@ -81,15 +76,10 @@ export async function summarizeTranscript(
     stream: true,
   });
 
-  return new ReadableStream({
-    async start(controller) {
-      for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content || "";
-        if (content) {
-          controller.enqueue(content);
-        }
-      }
-      controller.close();
-    },
-  });
+  let fullContent = "";
+  for await (const chunk of stream) {
+    fullContent += chunk.choices[0]?.delta?.content || "";
+  }
+
+  return fullContent.trim();
 }

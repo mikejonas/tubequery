@@ -39,9 +39,12 @@ export async function fetchMetadata(videoId: string) {
     .select(videoAndChannelSelect)
     .eq("id", videoId)
     .maybeSingle();
-  console.log({ cachedVideo });
   if (fetchedError) {
     console.error(fetchedError);
+  }
+
+  if (cachedVideo) {
+    return cachedVideo;
   }
 
   // Fetch video data from YouTube
