@@ -30,7 +30,7 @@ const Markdown: FC<Options> = ({ children, ...props }) => {
         TIMESTAMP_REGEX.test(part) ? (
           <span
             key={index}
-            className="timestamp-class text-blue-500 font-semibold cursor-pointer"
+            className="timestamp-class text-blue-300 font-normal cursor-pointer vertical-middle text-xs"
             onClick={() => handleTimestampClick(part)}
             onKeyDown={(e) => e.key === "Enter" && handleTimestampClick(part)}
             role="button"

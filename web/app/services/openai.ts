@@ -57,11 +57,17 @@ ${transcript}
 export async function summarizeTranscript(
   videoInfo: VideoInfo,
   returnMock: boolean
-): Promise<string> {
+): Promise<ReadableStream> {
   if (returnMock) {
-    return mockResponse[0];
+    return new ReadableStream({
+      start(controller) {
+        controller.enqueue(mockResponse[0]);
+        controller.close();
+      },
+    });
   }
-  const response = await openai.chat.completions.create({
+
+  const stream = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
       { role: "system", content: systemPrompt },
@@ -72,7 +78,18 @@ export async function summarizeTranscript(
     ],
     max_tokens: 1000,
     temperature: 0.7,
+    stream: true,
   });
 
-  return response.choices[0]?.message?.content?.trim() ?? "";
+  return new ReadableStream({
+    async start(controller) {
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || "";
+        if (content) {
+          controller.enqueue(content);
+        }
+      }
+      controller.close();
+    },
+  });
 }

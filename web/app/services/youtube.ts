@@ -1,7 +1,6 @@
 import ytdl from "@distube/ytdl-core";
 import { YoutubeTranscript } from "youtube-transcript";
 import { supabase } from "~/services/supabase";
-import { SupabaseTranscript } from "~/types/supabase-additional";
 import { formatTranscript } from "~/utils";
 
 const videoAndChannelSelect = `
@@ -23,27 +22,29 @@ const videoAndChannelSelect = `
     thumbnail_url,
     subscriber_count,
     channel_url
+  ),
+  summary(
+    summary_text
   )
 `;
 
+/*
+  Fetch all video and channel data from to render the page
+  Includes summary, if it exists. If not, the client should fetch the summary
+  from the stream summary endpoint.
+*/
 export async function fetchMetadata(videoId: string) {
-  /**
-   * Fetch video data and channel data from Supabase
-   */
-  const { data: fetchedVideo, error: fetchedError } = await supabase
+  const { data: cachedVideo, error: fetchedError } = await supabase
     .from("video")
     .select(videoAndChannelSelect)
     .eq("id", videoId)
     .maybeSingle();
-
+  console.log({ cachedVideo });
   if (fetchedError) {
     console.error(fetchedError);
   }
-  if (fetchedVideo) return fetchedVideo;
 
-  /**
-   * Fetch video data from YouTube
-   */
+  // Fetch video data from YouTube
   const ytdlInfo = await ytdl.getInfo(
     `https://www.youtube.com/watch?v=${videoId}`
   );
@@ -105,9 +106,10 @@ export async function fetchMetadata(videoId: string) {
   return data;
 }
 
+// Fetch video data from YouTube
 export async function fetchTranscript(videoId: string) {
   // Check if transcript exists in the database
-  const { data: fetchedTranscript, error: fetchError } = await supabase
+  const { data: cachedTranscript, error: fetchError } = await supabase
     .from("transcript")
     .select("transcript")
     .eq("video_id", videoId)
@@ -116,9 +118,9 @@ export async function fetchTranscript(videoId: string) {
   if (fetchError) {
     console.error("Error fetching transcript:", fetchError);
   }
-  if (fetchedTranscript) {
+  if (cachedTranscript) {
     return {
-      transcript: formatTranscript(fetchedTranscript.transcript || []),
+      transcript: formatTranscript(cachedTranscript.transcript || []),
     };
   }
   const transcript = await YoutubeTranscript.fetchTranscript(videoId);

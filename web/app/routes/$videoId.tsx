@@ -9,6 +9,7 @@ import VideoPlayer from "~/components/VideoPlayer";
 import { estimateReadingTime } from "~/utils";
 import Header from "~/components/Header";
 import { VideoProvider, useVideoContext } from "~/context/VideoContext";
+import { StreamingSummary } from "~/components/Stream";
 
 const ResultContent = () => {
   const [question, setQuestion] = useState("");
@@ -16,17 +17,23 @@ const ResultContent = () => {
   const [chat, setChat] = useState<{ question: string; answer: string }[]>([]);
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { videoId } = useParams();
+  const { videoId } = useParams() as { videoId: string };
   const { seekTo } = useVideoContext();
 
-  const query = useQuery({
+  const overviewQuery = useQuery({
+    queryKey: ["overview", videoId],
+    queryFn: () =>
+      fetch(`/api/overview?videoId=${videoId}`).then((res) => res.json()),
+  });
+
+  const summaryQuery = useQuery({
     queryKey: ["summary", videoId],
     queryFn: () =>
       fetch(`/api/summary?videoId=${videoId}`).then((res) => res.json()),
   });
 
-  const summary = query?.data?.summary || "";
-  const metadata = query?.data?.metadata || {};
+  const summary = summaryQuery.data?.summary;
+  const overview = overviewQuery.data?.overview || {};
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -88,12 +95,12 @@ const ResultContent = () => {
   const renderTitle = () => (
     <div>
       <h1 className="text-xl font-semibold flex items-center mb-2">
-        {metadata.title}
+        {overview.title}
       </h1>
       <div className="flex items-center text-sm text-zinc-500 dark:text-zinc-400 space-x-4">
         <div className="flex items-center">
           <Clock className="w-4 h-4 mr-1" />
-          <span>{estimateReadingTime(summary)} min read</span>
+          {summary && <span>{estimateReadingTime(summary)} min read</span>}
         </div>
         <button
           onClick={() => {
@@ -109,15 +116,23 @@ const ResultContent = () => {
     </div>
   );
 
-  const renderSummary = () => (
-    <div>
-      {summary && (
-        <div className="space-y-6">
-          <Markdown>{summary}</Markdown>
+  const renderSummary = () => {
+    console.log({ summary });
+    if (summary) {
+      console.log(summary);
+      return (
+        <div>
+          {summary && (
+            <div className="space-y-6">
+              <Markdown>{summary}</Markdown>
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  );
+      );
+    } else {
+      return <StreamingSummary videoId={videoId} />;
+    }
+  };
 
   const renderQuestion = (question: string) => {
     return (
@@ -171,6 +186,7 @@ const ResultContent = () => {
       </Button>
     </form>
   );
+  console.log({ overview, summary });
 
   return (
     <div className="flex flex-col">
