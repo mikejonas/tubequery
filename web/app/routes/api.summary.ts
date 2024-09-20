@@ -26,7 +26,6 @@ export const loader: LoaderFunction = async ({ request }) => {
     }
 
     if (storedSummary) {
-      console.log("Using cached summary for video ID:", videoId);
       return json({
         summary: storedSummary.summary_text,
       });

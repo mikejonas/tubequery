@@ -7,9 +7,20 @@ interface VideoPlayerProps {
   seekTo: number | null;
 }
 
+function useHydrated() {
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  return isHydrated;
+}
+
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, seekTo }) => {
   const playerRef = useRef<ReactPlayer>(null);
   const [playing, setPlaying] = useState(false);
+  const isHydrated = useHydrated();
 
   useEffect(() => {
     if (seekTo !== null && playerRef.current) {
@@ -17,6 +28,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, seekTo }) => {
       setPlaying(true);
     }
   }, [seekTo]);
+
+  if (!isHydrated) {
+    return <div className="mb-6 relative w-full aspect-video bg-gray-200" />;
+  }
 
   return (
     <div className="mb-6 relative w-full aspect-video">

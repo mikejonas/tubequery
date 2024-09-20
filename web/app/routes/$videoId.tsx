@@ -42,7 +42,7 @@ const ResultContent = () => {
   const summary = data?.metadata.summary;
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  console.log({});
+
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -76,7 +76,7 @@ const ResultContent = () => {
 
     // Add the new question to the chat immediately
     setChat((prev) => [...prev, { question: currentQuestion, answer: "" }]);
-    console.log(chat);
+
     for (let i = 0; i < words.length; i += wordsPerChunk) {
       const chunk = words.slice(i, i + wordsPerChunk).join(" ");
       displayedAnswer += chunk + " ";
@@ -168,7 +168,7 @@ const ResultContent = () => {
       <textarea
         ref={textareaRef}
         className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-lg py-4 px-4 pr-12 text-sm placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 resize-none overflow-hidden"
-        placeholder="Ask a question about the video..."
+        placeholder="Ask anything..."
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -193,7 +193,6 @@ const ResultContent = () => {
       </Button>
     </form>
   );
-  console.log({ overview, summary });
 
   return (
     <div className="flex flex-col">

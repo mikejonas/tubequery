@@ -44,7 +44,6 @@ export function StreamingSummary({ videoId }: StreamingSummaryProps) {
 
   return (
     <div>
-      <h2 className="mb-4">Summary</h2>
       <Markdown>{summary}</Markdown>
     </div>
   );

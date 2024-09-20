@@ -1,42 +1,48 @@
 import OpenAI from "openai";
-import { mockResponse } from "~/data";
+import { supabase } from "./supabase";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 const systemPrompt = `
-You are a summarization assistant. Your task is to take in a YouTube transcript or detailed video description and generate a structured, detailed output similar to the format used by Perplexity. The output should include headings, subheadings, and bullet points that summarize the key points. Each bullet point should include a timestamp in MM:SS format, presented as a numbered reference (e.g., [1:23]), indicating when the point is discussed in the video.
+You are a summarization assistant. Summarize the provided YouTube transcript or video description into a blog-style article. The summary should be concise, structured, and professional.
 
-The output should follow these guidelines:
+1. Use H2 (##) for major sections and H3 (###) for subtitles within sections.
+2. Use paragraph form for most of the summary, but feel free to use bullet points where it enhances clarity.
+3. Ignore any advertisements or promotional content, whether from the video or description.
+4. Include timestamps [MM:SS] where relevant, marking the start of each discussed point.
+5. Avoid repetitive phrasing, unnecessary lists, and overuse of bullet points. Focus on clear, natural language.
+6. Begin with a concise initial summary (no title or introduction).
 
-1. Headings should categorize the content into major sections (use ### format for headings).
-2. Subheadings (use **bold** text) to categorize further within each section.
-3. Bullet points should summarize key points clearly and concisely.
-4. Timestamps should be placed in square brackets like [1:23] to reference when the point is discussed in the video.
-5. Ensure the format is clean, professional, and easy to read.
-6. Begin with an initial summary, but do not include a title or announcement of summary.
+### Example:
 
-### Example Output Format:
+Explosions involving pagers in Lebanon are traced back to Taiwan and Hungary, with Mossad's involvement suspected.
 
-Whales are remarkable marine mammals that play a vital role in ocean ecosystems. Here's a deeper look into their characteristics, behaviors, and conservation status.
+## Investigation Overview
 
-### Types of Whales
+The investigation revealed that the pagers involved in the explosions were originally manufactured in Taiwan. From there, they were traced to Hungary, which became a key point of interest in the investigation [0:45]. Authorities linked these devices to a series of coordinated explosions, raising suspicions about international involvement.
 
-1. **Baleen Whales (Mysticetes)**: This group includes species such as the blue whale, humpback whale, and gray whale. They possess baleen plates made of keratin that allow them to filter small prey like krill and zooplankton from the water. Baleen whales are generally larger than toothed whales and are known for their impressive feeding techniques, such as bubble net feeding, where they trap prey using bubbles they create cooperatively [0:15].
+### Mossad's Alleged Role
 
-2. **Toothed Whales (Odontocetes)**: This group includes species like orcas, sperm whales, and belugas. Toothed whales have teeth and primarily consume larger prey, including fish and squid. They are also known for their advanced echolocation abilities, which help them navigate and hunt in the ocean [1:05].
+Further research suggested that Israel’s Mossad might have orchestrated the operation. Evidence pointed to the intelligence agency using covert tactics to carry out the attacks in Lebanon [1:30]. While concrete proof was limited, several sources indicated a possible connection.
 
-### Unique Characteristics
+## Consequences of the Explosions
 
-- **Intelligence and Communication**: Whales exhibit complex social behaviors and communication skills. For example, humpback whales are known for their elaborate songs, which can last up to 20 minutes and be heard over long distances. Belugas, often referred to as "canaries of the sea," have a wide range of vocalizations that they use to communicate with one another [2:00].
+The explosions had a profound impact on Lebanon, leading to widespread political unrest and further destabilization of the region [2:15].
 
----
+### Key Outcomes
 
-This structure should be used to ensure that your summaries are clear, detailed, and include appropriate timestamps from the transcript.
+- Political unrest increased as a result of the explosions.
+- Lebanon faced further instability in an already tense political climate [2:45].
+
+## International Response
+
+Several countries condemned the actions, calling for an independent investigation into the incidents [3:05]. Diplomatic responses varied, but the international community expressed concern over the implications for regional security.
 `;
 
 interface VideoInfo {
+  videoId: string;
   transcript: string;
   title: string;
   author: string;
@@ -44,7 +50,7 @@ interface VideoInfo {
 }
 
 const userPrompt = ({ transcript, title, author, description }: VideoInfo) => `
-Please summarize the following YouTube video transcript:
+Please summarize the following:
 
 Title: ${title}
 Author: ${author}
@@ -56,12 +62,8 @@ ${transcript}
 
 export async function summarizeTranscript(
   videoInfo: VideoInfo,
-  returnMock: boolean
-): Promise<string> {
-  if (returnMock) {
-    return mockResponse[0];
-  }
-
+  onChunkReceived: (chunk: string) => void // New callback function for streaming
+): Promise<void> {
   const stream = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
@@ -77,9 +79,22 @@ export async function summarizeTranscript(
   });
 
   let fullContent = "";
+
   for await (const chunk of stream) {
-    fullContent += chunk.choices[0]?.delta?.content || "";
+    const content = chunk.choices[0]?.delta?.content || "";
+    fullContent += content;
+    onChunkReceived(content); // Send chunk to the client
   }
 
-  return fullContent.trim();
+  const summary = fullContent.trim();
+
+  // Save the full generated summary to the database after streaming completes
+  const { error: saveError } = await supabase.from("summary").insert({
+    video_id: videoInfo.videoId,
+    summary_text: summary,
+  });
+
+  if (saveError) {
+    console.error("Error saving summary to database:", saveError);
+  }
 }

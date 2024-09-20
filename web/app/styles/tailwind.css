@@ -83,3 +83,54 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  h2 {
+    @apply font-semibold text-2xl mb-4 mt-8 leading-tight;
+  }
+
+  .markdown {
+    @apply max-w-[70ch] leading-[1.75] text-sm text-gray-800 dark:text-gray-200;
+  }
+
+  .markdown h2 {
+    @apply font-semibold text-2xl mb-4 mt-8 leading-tight;
+  }
+
+  .markdown h3 {
+    @apply font-semibold text-xl mb-3 mt-6 leading-tight;
+  }
+
+  .markdown p {
+    @apply mb-4 leading-[1.75] text-gray-800 dark:text-gray-200;
+  }
+
+  .markdown ul,
+  .markdown ol {
+    @apply pl-6 mb-4;
+  }
+
+  .markdown li {
+    @apply mb-2;
+  }
+
+  .markdown blockquote {
+    @apply pl-5 border-l-4 border-gray-300 text-gray-600 dark:text-gray-400 mb-4 italic;
+  }
+
+  .markdown code:not(pre code) {
+    @apply bg-gray-100 dark:bg-gray-800 py-0.5 px-1.5 rounded font-mono text-[0.95rem];
+  }
+
+  .markdown pre code {
+    @apply bg-gray-800 text-gray-100 p-4 block rounded-lg overflow-x-auto;
+  }
+
+  .markdown a {
+    @apply text-blue-600 dark:text-blue-400 underline font-medium;
+  }
+
+  .markdown ul {
+    @apply pl-6 mb-4 list-disc;
+  }
+}

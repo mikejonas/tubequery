@@ -1,10 +1,9 @@
 import React, { FC } from "react";
-import { ChevronRight } from "lucide-react";
 import ReactMarkdown, { Options } from "react-markdown";
 import { useVideoContext } from "~/context/VideoContext";
 
-// Improved TIMESTAMP_REGEX to match various time formats
-const TIMESTAMP_REGEX = /\[\d{1,2}:\d{2}\]/g;
+// Updated TIMESTAMP_REGEX to match various time formats including hours
+const TIMESTAMP_REGEX = /\[(?:\d{1,2}:)?\d{1,2}:\d{2}\]/g;
 
 // Helper function to split and detect timestamps in the text
 const processText = (text: string) => {
@@ -19,8 +18,19 @@ const Markdown: FC<Options> = ({ children, ...props }) => {
   const { setSeekTo } = useVideoContext();
 
   const handleTimestampClick = (timestamp: string) => {
-    const [minutes, seconds] = timestamp.slice(1, -1).split(":").map(Number);
-    const totalSeconds = minutes * 60 + seconds;
+    const timeparts = timestamp.slice(1, -1).split(":").map(Number);
+    let totalSeconds;
+
+    if (timeparts.length === 3) {
+      // Format: [HH:MM:SS]
+      const [hours, minutes, seconds] = timeparts;
+      totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    } else {
+      // Format: [MM:SS]
+      const [minutes, seconds] = timeparts;
+      totalSeconds = minutes * 60 + seconds;
+    }
+
     setSeekTo(totalSeconds);
   };
 
@@ -30,7 +40,7 @@ const Markdown: FC<Options> = ({ children, ...props }) => {
         TIMESTAMP_REGEX.test(part) ? (
           <span
             key={index}
-            className="timestamp-class text-blue-300 font-normal cursor-pointer vertical-middle text-xs"
+            className="timestamp-class text-blue-300 font-normal cursor-pointer align-middle text-xs"
             onClick={() => handleTimestampClick(part)}
             onKeyDown={(e) => e.key === "Enter" && handleTimestampClick(part)}
             role="button"
@@ -54,38 +64,27 @@ const Markdown: FC<Options> = ({ children, ...props }) => {
   };
 
   const customComponents = {
+    h2: ({ children, ...props }: React.PropsWithChildren) => (
+      <h2 {...props}>{renderChildren(children)}</h2>
+    ),
     h3: ({ children, ...props }: React.PropsWithChildren) => (
-      <h3
-        {...props}
-        className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-2"
-      >
-        {renderChildren(children)}
-      </h3>
+      <h3 {...props}>{renderChildren(children)}</h3>
     ),
     p: ({ children, ...props }: React.PropsWithChildren) => (
-      <p
-        {...props}
-        className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300"
-      >
-        {renderChildren(children)}
-      </p>
+      <p {...props}>{renderChildren(children)}</p>
     ),
-    ul: (props: React.PropsWithChildren) => (
-      <ul
-        {...props}
-        className="text-sm leading-relaxed space-y-2 text-zinc-700 dark:text-zinc-300"
-      />
-    ),
+    ul: (props: React.PropsWithChildren) => <ul {...props} />,
     li: ({ children, ...props }: React.PropsWithChildren) => (
-      <li {...props} className="flex items-start">
-        <ChevronRight className="w-4 h-4 text-zinc-500 dark:text-zinc-400 mr-2 mt-1 flex-shrink-0" />
-        <span>{renderChildren(children)}</span>
-      </li>
+      <li {...props}>{renderChildren(children)}</li>
     ),
   };
 
   return (
-    <ReactMarkdown {...props} components={customComponents}>
+    <ReactMarkdown
+      {...props}
+      components={customComponents}
+      className="markdown"
+    >
       {children}
     </ReactMarkdown>
   );
