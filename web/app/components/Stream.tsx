@@ -50,7 +50,7 @@ export function StreamingSummary({ videoId }: StreamingSummaryProps) {
 }
 
 async function fetchStreamingSummary(videoId: string): Promise<ReadableStream> {
-  const response = await fetch(`/api/stream?videoId=${videoId}`);
+  const response = await fetch(`/api/summary?videoId=${videoId}`);
   if (!response.ok) {
     throw new Error("Failed to fetch summary");
   }
