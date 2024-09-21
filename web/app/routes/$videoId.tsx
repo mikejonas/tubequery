@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useParams } from "@remix-run/react";
 import { useQuery } from "@tanstack/react-query";
 import VideoPlayer from "~/components/VideoPlayer";
@@ -21,6 +22,7 @@ type OverviewData = {
 const ResultContent = () => {
   const { videoId } = useParams() as { videoId: string };
   const { seekTo } = useVideoContext();
+  const mainContentRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading } = useQuery<OverviewData, Error>({
     queryKey: ["overview", videoId],
@@ -28,10 +30,19 @@ const ResultContent = () => {
       fetch(`/api/overview?videoId=${videoId}`).then((res) => res.json()),
   });
 
+  const scrollToBottomSmooth = () => {
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTo({
+        top: mainContentRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-screen">
       <Header />
-      <div className="flex-grow overflow-y-auto pb-24">
+      <div className="flex-grow overflow-y-auto" ref={mainContentRef}>
         <main className="max-w-2xl mx-auto p-6">
           {isLoading ? (
             <div>Loading...</div>
@@ -39,7 +50,7 @@ const ResultContent = () => {
             <>
               <VideoPlayer videoId={videoId} seekTo={seekTo} />
               <VideoDetails data={data!} />
-              <Chat videoId={videoId} />
+              <Chat videoId={videoId} onNewMessage={scrollToBottomSmooth} />
             </>
           )}
         </main>

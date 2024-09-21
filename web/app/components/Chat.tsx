@@ -5,7 +5,13 @@ import Markdown from "~/components/Markdown";
 import { useMutation } from "@tanstack/react-query";
 import { postChat } from "~/api-calls/chat";
 
-export default function ChatComponent({ videoId }: { videoId: string }) {
+export default function ChatComponent({
+  videoId,
+  onNewMessage,
+}: {
+  videoId: string;
+  onNewMessage: () => void;
+}) {
   const [question, setQuestion] = useState("");
   const [responding, setResponding] = useState(false);
   const [chat, setChat] = useState<{ question: string; answer: string }[]>([]);
@@ -17,6 +23,10 @@ export default function ChatComponent({ videoId }: { videoId: string }) {
     onMutate: () => {
       setResponding(true);
       setChat((prev) => [...prev, { question, answer: "" }]);
+
+      setTimeout(() => {
+        onNewMessage(); // Call this when a new message is added
+      }, 1);
     },
     onSuccess: async (stream) => {
       const reader = stream.getReader();
@@ -51,6 +61,16 @@ export default function ChatComponent({ videoId }: { videoId: string }) {
     }
   }, [question]);
 
+  // Add this new useEffect hook
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [chat]);
+
   const handleQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim()) return;
@@ -66,20 +86,20 @@ export default function ChatComponent({ videoId }: { videoId: string }) {
 
   const renderQuestion = (question: string) => {
     return (
-      <h2 className="text-xl font-semibold mb-4 flex items-center">
-        <span className="w-0.5 h-6 bg-red-500 mr-2"></span>
-        {question}
-      </h2>
+      <div className="text-message flex w-full flex-col items-end whitespace-normal break-words mb-8">
+        <div className="relative max-w-[70%] rounded-xl px-5 py-2.5 bg-[#f4f4f4] dark:bg-zinc-800">
+          {question}
+        </div>
+      </div>
     );
   };
 
   const renderChat = () => (
-    <div className="mt-8 space-y-4" ref={chatContainerRef}>
+    <div className="mt-4" ref={chatContainerRef}>
       {chat.map((item, index) => (
         <div key={index} className="space-y-2">
-          <hr className="my-4 border-t border-zinc-200 dark:border-zinc-700" />
           <div className="pv-3 ">{renderQuestion(item.question)}</div>
-          <div className="pv-3 ">
+          <div className="pv-3 min-h-12">
             <Markdown>{item.answer}</Markdown>
           </div>
         </div>
@@ -121,7 +141,7 @@ export default function ChatComponent({ videoId }: { videoId: string }) {
   return (
     <div>
       <div className="flex-grow overflow-y-auto pb-24" ref={chatContainerRef}>
-        <div className="mt-8 space-y-4">{renderChat()}</div>
+        <div className="space-y-4">{renderChat()}</div>
       </div>
       <div className="fixed bottom-0 left-0 right-0 py-4">
         <div className="max-w-2xl mx-auto">{renderChatInput()}</div>
