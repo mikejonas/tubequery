@@ -1,9 +1,5 @@
-import OpenAI from "openai";
-import { supabase } from "./supabase";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { openai } from "./index";
+import { supabase } from "../supabase";
 
 const systemPrompt = `
 You are a summarization assistant. Summarize the provided YouTube transcript or video description into a blog-style article. The summary should be concise, structured, and professional.

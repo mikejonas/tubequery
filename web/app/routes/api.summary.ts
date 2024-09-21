@@ -1,6 +1,6 @@
 import type { LoaderFunction } from "@remix-run/node";
 import { fetchMetadata, fetchTranscript } from "~/services/youtube";
-import { summarizeTranscript } from "~/services/openai";
+import { summarizeTranscript } from "~/services/openai/summarize";
 import { supabase } from "~/services/supabase";
 
 export const loader: LoaderFunction = async ({ request }) => {

@@ -4,12 +4,15 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "@remix-run/react";
+import { json } from "@remix-run/node";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { LinksFunction } from "@remix-run/node";
-import { useState, useEffect } from "react";
+import type { LinksFunction, LoaderFunction } from "@remix-run/node";
+import { useState, useEffect, useRef } from "react";
 
 import "./styles/tailwind.css";
+import { supabase } from "./services/supabase";
 
 export const links: LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -24,15 +27,44 @@ export const links: LinksFunction = () => [
   },
 ];
 
+export const loader: LoaderFunction = async () => {
+  return json({
+    ENV: {
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      SUPABASE_KEY: process.env.SUPABASE_KEY,
+    },
+  });
+};
+
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useLoaderData<typeof loader>();
   const [theme, setTheme] = useState("light");
+  const signInAttempted = useRef(false);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedTheme = localStorage.getItem("theme") || "light";
       setTheme(savedTheme);
       document.documentElement.classList.toggle("dark", savedTheme === "dark");
     }
-  }, []);
+
+    // Make ENV available to the window object
+    window.ENV = data.ENV;
+
+    const signInAnonymously = async () => {
+      if (signInAttempted.current) return;
+      signInAttempted.current = true;
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        await supabase.auth.signInAnonymously();
+      }
+    };
+
+    signInAnonymously();
+  }, []); // Empty dependency array
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -66,9 +98,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const [queryClient] = useState(() => new QueryClient());
+  const data = useLoaderData<typeof loader>();
 
   return (
     <QueryClientProvider client={queryClient}>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.ENV = ${JSON.stringify(data.ENV)}`,
+        }}
+      />
       <Outlet />
     </QueryClientProvider>
   );

@@ -2,12 +2,16 @@ import { Database } from "~/types/supabase";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl =
-  process.env.SUPABASE_URL ?? throwError("SUPABASE_URL is not set");
+  typeof document === "undefined"
+    ? process.env.SUPABASE_URL
+    : window.ENV.SUPABASE_URL;
 const supabaseKey =
-  process.env.SUPABASE_KEY ?? throwError("SUPABASE_KEY is not set");
+  typeof document === "undefined"
+    ? process.env.SUPABASE_KEY
+    : window.ENV.SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error("Missing Supabase environment variables");
+}
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
-
-function throwError(message: string): never {
-  throw new Error(message);
-}
