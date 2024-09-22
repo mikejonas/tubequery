@@ -2,7 +2,7 @@ import { supabase } from "~/services/supabase";
 
 export async function postChat(
   videoId: string,
-  question: string
+  content: string
 ): Promise<ReadableStream> {
   const {
     data: { session },
@@ -14,7 +14,7 @@ export async function postChat(
       Authorization: `Bearer ${session?.access_token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ content }),
   });
 
   if (!response.ok) {

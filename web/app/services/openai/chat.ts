@@ -1,6 +1,7 @@
 import { openai } from "./index";
 import { supabase } from "../supabase";
 import { fetchMetadata, fetchTranscript } from "../youtube";
+import { Database } from "../../types/supabase";
 
 interface SystemPrompt {
   transcript: string;
@@ -40,12 +41,13 @@ ${transcript}
 export async function chatResponse(
   userId: string,
   videoId: string,
-  question: string,
+  userContent: string,
   onChunkReceived: (chunk: string) => void // New callback function for streaming
 ): Promise<void> {
   const transcript = await fetchTranscript(videoId);
   const metadata = await fetchMetadata(videoId);
-  console.log(transcript);
+  const conversation = await fetchUserConversation(videoId, userId);
+  console.log(formatConversationForPrompt(conversation));
   const stream = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
@@ -58,9 +60,10 @@ export async function chatResponse(
           description: metadata!.description,
         }),
       },
+      ...formatConversationForPrompt(conversation),
       {
         role: "user",
-        content: question,
+        content: userContent,
       },
     ],
     max_tokens: 1000,
@@ -68,19 +71,19 @@ export async function chatResponse(
     stream: true,
   });
 
-  let message = "";
+  let responseContent = "";
 
   for await (const chunk of stream) {
     const content = chunk.choices[0]?.delta?.content || "";
-    message += content;
+    responseContent += content;
     onChunkReceived(content); // Send chunk to the client
   }
 
   // // Save the full generated summary to the database after streaming completes
   const { error: saveError } = await supabase.from("chat").insert({
     video_id: videoId,
-    message: message.trim(),
-    sender_type: "bot",
+    content: responseContent.trim(),
+    role: "assistant",
     user_id: userId,
   });
 
@@ -88,6 +91,28 @@ export async function chatResponse(
     console.error("Error saving summary to database:", saveError);
   }
 }
-function fetchVideoInfo(videoId: string) {
-  throw new Error("Function not implemented.");
+
+export async function fetchUserConversation(videoId: string, userId: string) {
+  const { data, error } = await supabase
+    .from("chat")
+    .select("*")
+    .eq("video_id", videoId)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  return data;
 }
+
+type ChatMessage = Database["public"]["Tables"]["chat"]["Row"];
+
+const formatConversationForPrompt = (conversation: ChatMessage[]) => {
+  return conversation.map((message) => ({
+    role: message.role as "user" | "assistant",
+    content: message.content,
+  }));
+};

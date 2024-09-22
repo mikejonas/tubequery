@@ -47,27 +47,30 @@ export type Database = {
       }
       chat: {
         Row: {
-          created_at: string | null
+          content: string
+          created_at: string
           id: number
-          message: string
-          sender_type: string
-          user_id: string | null
+          role: string
+          updated_at: string | null
+          user_id: string
           video_id: string
         }
         Insert: {
-          created_at?: string | null
+          content?: string
+          created_at?: string
           id?: never
-          message: string
-          sender_type: string
-          user_id?: string | null
+          role?: string
+          updated_at?: string | null
+          user_id: string
           video_id: string
         }
         Update: {
-          created_at?: string | null
+          content?: string
+          created_at?: string
           id?: never
-          message?: string
-          sender_type?: string
-          user_id?: string | null
+          role?: string
+          updated_at?: string | null
+          user_id?: string
           video_id?: string
         }
         Relationships: [

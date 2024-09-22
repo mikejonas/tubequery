@@ -12,21 +12,26 @@ export const action: ActionFunction = async ({ request }) => {
   const token = authHeader.replace("Bearer ", "");
   const { data: userData } = await supabase.auth.getUser(token);
   const userId = userData.user?.id;
-
-  // Extract question from request body
-  const { question } = await request.json();
-
-  // Insert user message
-  await supabase.from("chat").insert({
-    video_id: videoId!,
-    message: question,
-    sender_type: "user",
-    user_id: userId,
-  });
+  const { content } = await request.json();
+  console.log({ videoId, userId });
+  if (videoId && userId) {
+    const { error } = await supabase.from("chat").insert({
+      video_id: videoId,
+      content,
+      role: "user",
+      user_id: userId,
+    });
+    if (error) {
+      console.error(error);
+      throw new Error("Error inserting chat message");
+    }
+  } else {
+    throw new Error("Missing videoId or userId");
+  }
 
   const stream = new ReadableStream({
     async start(controller) {
-      await chatResponse(userId!, videoId!, question, (chunk) => {
+      await chatResponse(userId!, videoId!, content, (chunk) => {
         const encoder = new TextEncoder();
         controller.enqueue(encoder.encode(chunk));
       });
