@@ -13,6 +13,7 @@ export const loader: LoaderFunction = async ({ request }) => {
       { status: 400 }
     );
   }
+  console.log(videoId);
 
   try {
     const transcript = await fetchTranscript(videoId);

@@ -1,6 +1,6 @@
 import ytdl from "@distube/ytdl-core";
 import { YoutubeTranscript } from "youtube-transcript";
-import { supabaseClient } from "~/services/supabase";
+import { supabaseAdminClient } from "~/services/supabase-backend";
 import { formatTranscript } from "~/utils";
 
 const videoAndChannelSelect = `
@@ -34,7 +34,7 @@ const videoAndChannelSelect = `
   from the stream summary endpoint.
 */
 export async function fetchMetadata(videoId: string) {
-  const { data: cachedVideo, error: fetchedError } = await supabaseClient
+  const { data: cachedVideo, error: fetchedError } = await supabaseAdminClient
     .from("video")
     .select(videoAndChannelSelect)
     .eq("id", videoId)
@@ -56,25 +56,27 @@ export async function fetchMetadata(videoId: string) {
   const author = videoDetails.author;
   const avatar = author?.thumbnails?.[author.thumbnails.length - 1]?.url || "";
 
-  const { error: channelError } = await supabaseClient.from("channel").upsert(
-    {
-      id: videoDetails.channelId,
-      channel_name: author.name,
-      thumbnail_url: avatar,
-      subscriber_count: author.subscriber_count || 0,
-      channel_url: author.channel_url || "",
-      is_verified: author.verified || false,
-      user_url: author.user_url || "",
-    },
-    { onConflict: "id" }
-  );
+  const { error: channelError } = await supabaseAdminClient
+    .from("channel")
+    .upsert(
+      {
+        id: videoDetails.channelId,
+        channel_name: author.name,
+        thumbnail_url: avatar,
+        subscriber_count: author.subscriber_count || 0,
+        channel_url: author.channel_url || "",
+        is_verified: author.verified || false,
+        user_url: author.user_url || "",
+      },
+      { onConflict: "id" }
+    );
 
   if (channelError) {
     console.error("Error upserting channel:", channelError);
     return null;
   }
 
-  const { data, error: videoError } = await supabaseClient
+  const { data, error: videoError } = await supabaseAdminClient
     .from("video")
     .insert({
       id: videoId,
@@ -112,11 +114,12 @@ export async function fetchMetadata(videoId: string) {
 // Fetch video data from YouTube
 export async function fetchTranscript(videoId: string) {
   // Check if transcript exists in the database
-  const { data: cachedTranscript, error: fetchError } = await supabaseClient
-    .from("transcript")
-    .select("transcript")
-    .eq("video_id", videoId)
-    .single();
+  const { data: cachedTranscript, error: fetchError } =
+    await supabaseAdminClient
+      .from("transcript")
+      .select("transcript")
+      .eq("video_id", videoId)
+      .single();
 
   if (fetchError) {
     console.error("Error fetching transcript:", fetchError);
@@ -127,14 +130,15 @@ export async function fetchTranscript(videoId: string) {
     };
   }
   const transcript = await YoutubeTranscript.fetchTranscript(videoId);
-  const { data: insertedTranscript, error: insertError } = await supabaseClient
-    .from("transcript")
-    .insert({
-      video_id: videoId,
-      transcript: JSON.stringify(transcript),
-    })
-    .select("transcript")
-    .single();
+  const { data: insertedTranscript, error: insertError } =
+    await supabaseAdminClient
+      .from("transcript")
+      .insert({
+        video_id: videoId,
+        transcript: JSON.stringify(transcript),
+      })
+      .select("transcript")
+      .single();
 
   if (insertError) {
     console.error("Error saving transcript to database:", insertError);

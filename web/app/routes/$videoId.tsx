@@ -30,15 +30,6 @@ const ResultContent = () => {
       fetch(`/api/overview?videoId=${videoId}`).then((res) => res.json()),
   });
 
-  const scrollToBottomSmooth = () => {
-    if (mainContentRef.current) {
-      mainContentRef.current.scrollTo({
-        top: mainContentRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  };
-
   return (
     <div className="flex flex-col h-screen">
       <Header />
@@ -50,7 +41,7 @@ const ResultContent = () => {
             <>
               <VideoPlayer videoId={videoId} seekTo={seekTo} />
               <VideoDetails data={data!} />
-              <Chat videoId={videoId} onNewMessage={scrollToBottomSmooth} />
+              <Chat videoId={videoId} />
             </>
           )}
         </main>

@@ -5,13 +5,8 @@ import Markdown from "~/components/Markdown";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getChatHistory, postChat } from "~/api-calls/chat";
 import { ChatMessage } from "~/types/supabase-additional";
-export default function ChatComponent({
-  videoId,
-  onNewMessage,
-}: {
-  videoId: string;
-  onNewMessage: () => void;
-}) {
+
+export default function ChatComponent({ videoId }: { videoId: string }) {
   const queryClient = useQueryClient();
   const { data: chatHistory, refetch: refetchChatHistory } = useQuery({
     queryKey: ["chatHistory", videoId],
@@ -42,7 +37,6 @@ export default function ChatComponent({
         { role: "assistant", content: "" },
       ]);
 
-      onNewMessage();
       scrollToBottom("smooth");
       return { previousChatHistory };
     },
@@ -97,7 +91,7 @@ export default function ChatComponent({
     e.preventDefault();
     if (question.trim()) {
       chatMutation.mutate(question);
-      setTimeout(scrollToBottom, 100);
+      scrollToBottom("smooth");
     }
   };
 
@@ -183,7 +177,7 @@ export default function ChatComponent({
 
   return (
     <div className="relative flex flex-col h-full">
-      <div className="flex-grow overflow-y-auto pb-24">
+      <div className="pb-24">
         <div className="space-y-4">{renderChat()}</div>
       </div>
       <div className="fixed bottom-0 left-0 right-0 py-4">

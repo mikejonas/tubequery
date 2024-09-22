@@ -31,19 +31,19 @@ export const loader: LoaderFunction = async () => {
   return json({
     ENV: {
       SUPABASE_URL: process.env.SUPABASE_URL,
-      SUPABASE_KEY: process.env.SUPABASE_KEY,
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
     },
   });
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useLoaderData<typeof loader>();
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
   const signInAttempted = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const savedTheme = localStorage.getItem("theme") || "light";
+      const savedTheme = localStorage.getItem("theme") || "dark";
       setTheme(savedTheme);
       document.documentElement.classList.toggle("dark", savedTheme === "dark");
     }
@@ -64,17 +64,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
     };
 
     signInAnonymously();
-  }, []); // Empty dependency array
+  }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
-  };
+  // const toggleTheme = () => {
+  //   const newTheme = theme === "light" ? "dark" : "light";
+  //   setTheme(newTheme);
+  //   localStorage.setItem("theme", newTheme);
+  //   document.documentElement.classList.toggle("dark", newTheme === "dark");
+  // };
 
   return (
-    <html lang="en" className={theme}>
+    <html lang="en" className="dark">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -82,12 +82,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="bg-white dark:bg-zinc-900 text-black dark:text-white">
-        <button
+        {/* <button
           onClick={toggleTheme}
           className="absolute top-4 right-4 p-2 bg-zinc-200 dark:bg-zinc-700 rounded"
         >
           {theme === "light" ? "🌙" : "☀️"}
-        </button>
+        </button> */}
         {children}
         <ScrollRestoration />
         <Scripts />
