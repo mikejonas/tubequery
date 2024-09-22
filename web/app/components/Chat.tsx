@@ -31,11 +31,14 @@ export default function ChatComponent({ videoId }: { videoId: string }) {
         "chatHistory",
         videoId,
       ]);
-      queryClient.setQueryData(["chatHistory", videoId], (old: CHAT) => [
-        ...(old || []),
-        { role: "user", content: newQuestion },
-        { role: "assistant", content: "" },
-      ]);
+      queryClient.setQueryData(
+        ["chatHistory", videoId],
+        (old: ChatMessage[]) => [
+          ...(old || []),
+          { role: "user", content: newQuestion },
+          { role: "assistant", content: "" },
+        ]
+      );
 
       scrollToBottom("smooth");
       return { previousChatHistory };
@@ -45,6 +48,7 @@ export default function ChatComponent({ videoId }: { videoId: string }) {
       const decoder = new TextDecoder();
       let accumulatedAnswer = "";
 
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;

@@ -38,13 +38,13 @@ export const loader: LoaderFunction = async () => {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useLoaderData<typeof loader>();
-  const [theme, setTheme] = useState("dark");
+  // const [theme, setTheme] = useState("dark");
   const signInAttempted = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedTheme = localStorage.getItem("theme") || "dark";
-      setTheme(savedTheme);
+      // setTheme(savedTheme);
       document.documentElement.classList.toggle("dark", savedTheme === "dark");
     }
 

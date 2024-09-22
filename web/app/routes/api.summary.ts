@@ -1,7 +1,7 @@
 import type { LoaderFunction } from "@remix-run/node";
 import { fetchMetadata, fetchTranscript } from "~/services/youtube";
 import { summarizeTranscript } from "~/services/openai/summarize";
-import { supabaseClient } from "~/services/supabase";
+import { supabaseAdminClient } from "~/services/supabase-backend";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const url = new URL(request.url);
@@ -22,11 +22,12 @@ export const loader: LoaderFunction = async ({ request }) => {
     }
 
     // Check if summary already exists in the database
-    const { data: cachedSummary, error: summaryError } = await supabaseClient
-      .from("summary")
-      .select("summary_text")
-      .eq("video_id", videoId)
-      .maybeSingle();
+    const { data: cachedSummary, error: summaryError } =
+      await supabaseAdminClient
+        .from("summary")
+        .select("summary_text")
+        .eq("video_id", videoId)
+        .maybeSingle();
 
     if (summaryError) {
       console.error("Error fetching summary:", summaryError);

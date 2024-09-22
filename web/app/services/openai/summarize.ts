@@ -1,5 +1,5 @@
 import { openai } from "./index";
-import { supabaseClient } from "../supabase";
+import { supabaseAdminClient } from "../supabase-backend";
 
 const systemPrompt = `
 You are a summarization assistant. Summarize the provided YouTube transcript or video description into a blog-style article. The summary should be concise, structured, and professional.
@@ -85,10 +85,12 @@ export async function summarizeTranscript(
   const summary = fullContent.trim();
 
   // Save the full generated summary to the database after streaming completes
-  const { error: saveError } = await supabaseClient.from("summary").insert({
-    video_id: videoInfo.videoId,
-    summary_text: summary,
-  });
+  const { error: saveError } = await supabaseAdminClient
+    .from("summary")
+    .insert({
+      video_id: videoInfo.videoId,
+      summary_text: summary,
+    });
 
   if (saveError) {
     console.error("Error saving summary to database:", saveError);

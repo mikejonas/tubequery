@@ -3,6 +3,8 @@ import Markdown from "~/components/Markdown";
 import { estimateReadingTime } from "~/utils";
 import { StreamingSummary } from "~/components/Stream";
 import { Tables } from "~/types/supabase";
+import { useVideoContext } from "~/context/VideoContext";
+import VideoPlayer from "./VideoPlayer";
 
 type VideoData = Tables<"video">;
 type ChannelData = Tables<"channel">;
@@ -22,12 +24,14 @@ export default function VideoDetailsComponent({
 }) {
   const overview = data.metadata;
   const summary = data.metadata.summary;
-
+  const { seekTo } = useVideoContext();
+  const videoId = overview.id;
   const renderTitle = () => (
     <div>
       <h1 className="text-xl font-semibold flex items-center mb-2">
         {overview?.title}
       </h1>
+      <VideoPlayer videoId={overview.id} seekTo={seekTo} />
       <div className="flex items-center text-sm text-zinc-500 dark:text-zinc-400 space-x-4">
         <div className="flex items-center">
           <Clock className="w-4 h-4 mr-1" />
@@ -61,14 +65,14 @@ export default function VideoDetailsComponent({
         </div>
       );
     } else {
-      return <StreamingSummary videoId={overview.id} />;
+      return <StreamingSummary videoId={videoId} />;
     }
   };
 
   return (
     <div>
       <div className="mb-4">{renderTitle()}</div>
-      {summary ? renderSummary() : <StreamingSummary videoId={overview.id} />}
+      {summary ? renderSummary() : <StreamingSummary videoId={videoId} />}
     </div>
   );
 }
