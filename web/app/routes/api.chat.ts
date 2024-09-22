@@ -13,7 +13,7 @@ export const action: ActionFunction = async ({ request }) => {
   const { data: userData } = await supabase.auth.getUser(token);
   const userId = userData.user?.id;
   const { content } = await request.json();
-  console.log({ videoId, userId });
+
   if (videoId && userId) {
     const { error } = await supabase.from("chat").insert({
       video_id: videoId,
