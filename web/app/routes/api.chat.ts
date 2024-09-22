@@ -1,42 +1,73 @@
 import type { ActionFunction } from "@remix-run/node";
 import { chatResponse } from "~/services/openai/chat";
-import { supabase } from "~/services/supabase";
+import { getUserSupabaseClient } from "~/services/supabase";
 
 export const action: ActionFunction = async ({ request }) => {
-  // Get video id from url
   const url = new URL(request.url);
   const videoId = url.searchParams.get("videoId");
+  const authHeader = request.headers.get("authorization");
 
-  // Get user id from auth
-  const authHeader = request.headers.get("authorization")!;
-  const token = authHeader.replace("Bearer ", "");
-  const { data: userData } = await supabase.auth.getUser(token);
-  const userId = userData.user?.id;
+  if (!authHeader) {
+    return new Response("Missing Authorization header", { status: 401 });
+  }
+
+  const userSupabaseClient = getUserSupabaseClient(authHeader);
+
+  const {
+    data: { user },
+    error: userError,
+  } = await userSupabaseClient.auth.getUser();
+
+  if (userError || !user) {
+    console.error(userError);
+    return new Response("Invalid or expired token", { status: 401 });
+  }
+
+  const userId = user.id;
+
+  if (!videoId || !userId) {
+    throw new Error("Missing videoId or userId");
+  }
+
   const { content } = await request.json();
 
-  if (videoId && userId) {
-    const { error } = await supabase.from("chat").insert({
-      video_id: videoId,
-      content,
-      role: "user",
-      user_id: userId,
-    });
-    if (error) {
-      console.error(error);
-      throw new Error("Error inserting chat message");
-    }
-  } else {
-    throw new Error("Missing videoId or userId");
+  const { error } = await userSupabaseClient.from("chat").insert({
+    video_id: videoId,
+    content,
+    role: "user",
+    user_id: userId,
+  });
+
+  if (error) {
+    console.error(error);
+    throw new Error("Error inserting chat message");
   }
 
   const stream = new ReadableStream({
     async start(controller) {
-      await chatResponse(userId!, videoId!, content, (chunk) => {
-        const encoder = new TextEncoder();
-        controller.enqueue(encoder.encode(chunk));
-      });
+      try {
+        const response = await chatResponse(
+          userId,
+          videoId,
+          content,
+          (chunk) => {
+            const encoder = new TextEncoder();
+            controller.enqueue(encoder.encode(chunk));
+          }
+        );
 
-      controller.close();
+        await userSupabaseClient.from("chat").insert({
+          video_id: videoId,
+          content: response,
+          role: "assistant",
+          user_id: userId,
+        });
+
+        controller.close();
+      } catch (err) {
+        console.error("Error while generating chat response:", err);
+        controller.error(err);
+      }
     },
   });
 

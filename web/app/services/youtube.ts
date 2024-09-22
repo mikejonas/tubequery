@@ -1,6 +1,6 @@
 import ytdl from "@distube/ytdl-core";
 import { YoutubeTranscript } from "youtube-transcript";
-import { supabase } from "~/services/supabase";
+import { supabaseClient } from "~/services/supabase";
 import { formatTranscript } from "~/utils";
 
 const videoAndChannelSelect = `
@@ -34,7 +34,7 @@ const videoAndChannelSelect = `
   from the stream summary endpoint.
 */
 export async function fetchMetadata(videoId: string) {
-  const { data: cachedVideo, error: fetchedError } = await supabase
+  const { data: cachedVideo, error: fetchedError } = await supabaseClient
     .from("video")
     .select(videoAndChannelSelect)
     .eq("id", videoId)
@@ -56,7 +56,7 @@ export async function fetchMetadata(videoId: string) {
   const author = videoDetails.author;
   const avatar = author?.thumbnails?.[author.thumbnails.length - 1]?.url || "";
 
-  const { error: channelError } = await supabase.from("channel").upsert(
+  const { error: channelError } = await supabaseClient.from("channel").upsert(
     {
       id: videoDetails.channelId,
       channel_name: author.name,
@@ -74,7 +74,7 @@ export async function fetchMetadata(videoId: string) {
     return null;
   }
 
-  const { data, error: videoError } = await supabase
+  const { data, error: videoError } = await supabaseClient
     .from("video")
     .insert({
       id: videoId,
@@ -112,7 +112,7 @@ export async function fetchMetadata(videoId: string) {
 // Fetch video data from YouTube
 export async function fetchTranscript(videoId: string) {
   // Check if transcript exists in the database
-  const { data: cachedTranscript, error: fetchError } = await supabase
+  const { data: cachedTranscript, error: fetchError } = await supabaseClient
     .from("transcript")
     .select("transcript")
     .eq("video_id", videoId)
@@ -127,7 +127,7 @@ export async function fetchTranscript(videoId: string) {
     };
   }
   const transcript = await YoutubeTranscript.fetchTranscript(videoId);
-  const { data: insertedTranscript, error: insertError } = await supabase
+  const { data: insertedTranscript, error: insertError } = await supabaseClient
     .from("transcript")
     .insert({
       video_id: videoId,

@@ -12,7 +12,7 @@ import type { LinksFunction, LoaderFunction } from "@remix-run/node";
 import { useState, useEffect, useRef } from "react";
 
 import "./styles/tailwind.css";
-import { supabase } from "./services/supabase";
+import { supabaseClient } from "./services/supabase";
 
 export const links: LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -57,9 +57,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await supabaseClient.auth.getSession();
       if (!session) {
-        await supabase.auth.signInAnonymously();
+        await supabaseClient.auth.signInAnonymously();
       }
     };
 

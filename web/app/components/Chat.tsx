@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "~/components/ui/button";
 import { ArrowUp, Loader2 } from "lucide-react";
 import Markdown from "~/components/Markdown";
-import { useMutation } from "@tanstack/react-query";
-import { postChat } from "~/api-calls/chat";
-
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getChatHistory, postChat } from "~/api-calls/chat";
+import { ChatMessage } from "~/types/supabase-additional";
 export default function ChatComponent({
   videoId,
   onNewMessage,
@@ -12,69 +12,93 @@ export default function ChatComponent({
   videoId: string;
   onNewMessage: () => void;
 }) {
+  const queryClient = useQueryClient();
+  const { data: chatHistory, refetch: refetchChatHistory } = useQuery({
+    queryKey: ["chatHistory", videoId],
+    queryFn: () => getChatHistory(videoId),
+  });
+
   const [question, setQuestion] = useState("");
   const [responding, setResponding] = useState(false);
-  const [chat, setChat] = useState<{ question: string; answer: string }[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const dummyRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = (behavior: "instant" | "smooth") => {
+    dummyRef.current?.scrollIntoView({ behavior });
+  };
 
   const chatMutation = useMutation({
     mutationFn: (question: string) => postChat(videoId, question),
-    onMutate: () => {
+    onMutate: async (newQuestion) => {
       setResponding(true);
-      setChat((prev) => [...prev, { question, answer: "" }]);
 
-      setTimeout(() => {
-        onNewMessage(); // Call this when a new message is added
-      }, 1);
+      const previousChatHistory = queryClient.getQueryData([
+        "chatHistory",
+        videoId,
+      ]);
+      queryClient.setQueryData(["chatHistory", videoId], (old: CHAT) => [
+        ...(old || []),
+        { role: "user", content: newQuestion },
+        { role: "assistant", content: "" },
+      ]);
+
+      onNewMessage();
+      scrollToBottom("smooth");
+      return { previousChatHistory };
     },
     onSuccess: async (stream) => {
       const reader = stream.getReader();
       const decoder = new TextDecoder();
       let accumulatedAnswer = "";
 
-      let done = false;
-      while (!done) {
-        const result = await reader.read();
-        done = result.done;
+      while (true) {
+        const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(result.value);
-        accumulatedAnswer += chunk;
-        setChat((prev) => {
-          const newChat = [...prev];
-          newChat[newChat.length - 1].answer = accumulatedAnswer;
-          return newChat;
-        });
+
+        accumulatedAnswer += decoder.decode(value);
+
+        queryClient.setQueryData(
+          ["chatHistory", videoId],
+          (old: ChatMessage[]) => {
+            const newChatHistory = [...old];
+            newChatHistory[newChatHistory.length - 1] = {
+              ...newChatHistory[newChatHistory.length - 1],
+              content: accumulatedAnswer,
+            };
+            return newChatHistory;
+          }
+        );
+
+        scrollToBottom("instant");
       }
+    },
+
+    onError: (err, newQuestion, context) => {
+      queryClient.setQueryData(
+        ["chatHistory", videoId],
+        context?.previousChatHistory
+      );
     },
     onSettled: () => {
       setResponding(false);
       setQuestion("");
+      refetchChatHistory();
     },
   });
 
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height =
-        textareaRef.current.scrollHeight + "px";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [question]);
 
-  // Add this new useEffect hook
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTo({
-        top: chatContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, [chat]);
-
-  const handleQuestion = async (e: React.FormEvent) => {
+  const handleQuestion = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!question.trim()) return;
-    chatMutation.mutate(question);
+    if (question.trim()) {
+      chatMutation.mutate(question);
+      setTimeout(scrollToBottom, 100);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -84,28 +108,47 @@ export default function ChatComponent({
     }
   };
 
-  const renderQuestion = (question: string) => {
-    return (
-      <div className="text-message flex w-full flex-col items-end whitespace-normal break-words mb-8">
-        <div className="relative max-w-[70%] rounded-xl px-5 py-2.5 bg-[#f4f4f4] dark:bg-zinc-800">
-          {question}
+  const renderChatMessage = (
+    item: { role: string; content: string },
+    index: number
+  ) => {
+    if (item.role === "user") {
+      return (
+        <div key={index} className="space-y-2">
+          <div className="pv-3 ">
+            <div className="text-message flex w-full flex-col items-end whitespace-normal break-words mb-8">
+              <div className="relative max-w-[70%] rounded-xl px-5 py-2.5 bg-[#f4f4f4] dark:bg-zinc-800">
+                {item.content}
+              </div>
+            </div>
+          </div>
         </div>
+      );
+    }
+    if (item.role === "assistant") {
+      return (
+        <div key={index} className="space-y-2">
+          <div className="pv-3 min-h-12">
+            <Markdown>{item.content}</Markdown>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderChat = () => {
+    if (!chatHistory) {
+      return <div>Loading chat history...</div>;
+    }
+
+    return (
+      <div className="mt-4">
+        {chatHistory.map(renderChatMessage)}
+        <div ref={dummyRef} />
       </div>
     );
   };
-
-  const renderChat = () => (
-    <div className="mt-4" ref={chatContainerRef}>
-      {chat.map((item, index) => (
-        <div key={index} className="space-y-2">
-          <div className="pv-3 ">{renderQuestion(item.question)}</div>
-          <div className="pv-3 min-h-12">
-            <Markdown>{item.answer}</Markdown>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
 
   const renderChatInput = () => (
     <form onSubmit={handleQuestion} className="relative mx-6">
@@ -139,8 +182,8 @@ export default function ChatComponent({
   );
 
   return (
-    <div>
-      <div className="flex-grow overflow-y-auto pb-24" ref={chatContainerRef}>
+    <div className="relative flex flex-col h-full">
+      <div className="flex-grow overflow-y-auto pb-24">
         <div className="space-y-4">{renderChat()}</div>
       </div>
       <div className="fixed bottom-0 left-0 right-0 py-4">

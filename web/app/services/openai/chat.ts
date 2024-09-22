@@ -1,5 +1,5 @@
 import { openai } from "./index";
-import { supabase } from "../supabase";
+import { supabaseClient } from "../supabase";
 import { fetchMetadata, fetchTranscript } from "../youtube";
 import { Database } from "../../types/supabase";
 
@@ -43,7 +43,7 @@ export async function chatResponse(
   videoId: string,
   userContent: string,
   onChunkReceived: (chunk: string) => void // New callback function for streaming
-): Promise<void> {
+) {
   const transcript = await fetchTranscript(videoId);
   const metadata = await fetchMetadata(videoId);
   const conversation = await fetchUserConversation(videoId, userId);
@@ -79,26 +79,16 @@ export async function chatResponse(
     onChunkReceived(content); // Send chunk to the client
   }
 
-  // // Save the full generated summary to the database after streaming completes
-  const { error: saveError } = await supabase.from("chat").insert({
-    video_id: videoId,
-    content: responseContent.trim(),
-    role: "assistant",
-    user_id: userId,
-  });
-
-  if (saveError) {
-    console.error("Error saving summary to database:", saveError);
-  }
+  return responseContent;
 }
 
 export async function fetchUserConversation(videoId: string, userId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from("chat")
     .select("*")
     .eq("video_id", videoId)
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: true })
     .limit(10);
   if (error) {
     console.error(error);

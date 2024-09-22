@@ -1,4 +1,4 @@
-import { supabase } from "~/services/supabase";
+import { supabaseClient } from "~/services/supabase";
 
 export async function postChat(
   videoId: string,
@@ -6,7 +6,7 @@ export async function postChat(
 ): Promise<ReadableStream> {
   const {
     data: { session },
-  } = await supabase.auth.getSession();
+  } = await supabaseClient.auth.getSession();
 
   const response = await fetch(`/api/chat?videoId=${videoId}`, {
     method: "POST",
@@ -21,4 +21,14 @@ export async function postChat(
     throw new Error("Failed to fetch chat response");
   }
   return response.body as ReadableStream;
+}
+
+export async function getChatHistory(videoId: string) {
+  const response = await supabaseClient
+    .from("chat")
+    .select("*")
+    .eq("video_id", videoId)
+    .order("created_at", { ascending: true });
+
+  return response.data;
 }
