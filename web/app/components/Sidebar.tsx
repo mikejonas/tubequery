@@ -1,36 +1,29 @@
-// Sidebar.jsx
-import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LogOut, Menu } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getActivityHistory } from "~/api-calls/activity";
 
-const videoIds = [
-  "CL_mkrcNEKE",
-  "tEzs3VHyBDM",
-  "m2lU3sDbOnQ",
-  "rzoiS0bGrFM",
-  "fwo5OST3Jh8",
-  "9ggYaBWqkj0",
-];
-
-// Function to generate navigation links from videoIds
-const generateVideoLinks = (ids) => {
-  return ids.map((id) => ({
-    name: `Video ${id}`,
-    path: `/${id}`,
+// Function to generate navigation links from history
+const generateVideoLinks = (history: { id: string; title: string }[]) => {
+  return history.map((item) => ({
+    name: item.title,
+    path: `/${item.id}`,
   }));
 };
 
-// Define navigation sections
-const navigation = [
-  {
-    section: "History",
-    links: generateVideoLinks(videoIds),
-  },
-  // You can add more sections here if needed
-];
-
 export default function Sidebar({ isOpen, toggleSidebar }) {
   const location = useLocation();
+  const { data: activityHistory } = useQuery({
+    queryKey: ["activity"],
+    queryFn: getActivityHistory,
+  });
+
+  const navigation = [
+    {
+      section: "History",
+      links: generateVideoLinks(activityHistory ?? []),
+    },
+  ];
 
   return (
     <>
@@ -51,37 +44,32 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           <div className="flex-1 px-4 py-4 space-y-4 overflow-y-auto mt-16">
             {navigation.map((section) => (
               <div key={section.section}>
-                {/* Section Title */}
                 <p className="text-zinc-400 text-xs font-semibold uppercase mb-2">
                   {section.section}
                 </p>
-                {/* Links within the section */}
                 <ul className="space-y-2">
-                  {section.links.map((item) => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                      <li key={item.name}>
-                        <Link
-                          to={item.path}
-                          className={`flex items-center p-2 text-xs font-medium rounded-md transition-colors ${
-                            isActive
-                              ? "bg-zinc-700 text-zinc-100"
-                              : "text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
-                          }`}
-                          onClick={toggleSidebar} // Close sidebar on link click (for mobile)
-                        >
-                          {item.name}
-                        </Link>
-                      </li>
-                    );
-                  })}
+                  {section.links.map((item) => (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        className={`flex items-center p-2 text-xs font-medium rounded-md transition-colors ${
+                          location.pathname === item.path
+                            ? "bg-zinc-700 text-zinc-100"
+                            : "text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                        } whitespace-nowrap overflow-hidden`}
+                        onClick={toggleSidebar}
+                      >
+                        <span className="truncate">{item.name}</span>
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}
           </div>
 
           {/* Footer (Logout) */}
-          <div className="px-4 py-4 border-t border-zinc-800">
+          <div className="px-4 py-2 border-t border-zinc-800">
             <Link
               to="/logout"
               className="flex items-center p-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 rounded-md"

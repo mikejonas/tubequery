@@ -40,7 +40,10 @@ export default function Index() {
       {/* Main Content */}
       <main className="flex-grow mx-auto w-full p-6 flex flex-col items-center justify-center">
         <h1 className="text-3xl mb-10">Summarize YouTube Videos</h1>
-        <form onSubmit={handleSubmit} className="relative max-w-xl w-full">
+        <form
+          onSubmit={handleSubmit}
+          className="relative max-w-xl w-full flex items-center"
+        >
           <Input
             ref={inputRef}
             type="url"
@@ -48,14 +51,14 @@ export default function Index() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required
-            className="w-full pr-12 bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-400 rounded-lg h-12 text-sm"
+            className="w-full pr-14 bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-400 rounded-lg h-12 text-sm"
           />
           <Button
             type="submit"
-            className="absolute right-1 top-1 bottom-1 h-auto w-10 rounded-md bg-zinc-700 hover:bg-zinc-600"
+            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-10 w-10 rounded-lg bg-blue-600 hover:bg-blue-500"
             disabled={!url.trim()}
           >
-            <ArrowRight className="h-5 w-5 text-zinc-100" />
+            <ArrowRight className="h-5 w-5 text-white fixed" />
             <span className="sr-only">Generate Summary</span>
           </Button>
         </form>

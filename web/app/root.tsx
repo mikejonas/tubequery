@@ -14,7 +14,6 @@ import { useState, useEffect, useRef } from "react";
 import "./styles/tailwind.css";
 import { supabaseClient } from "./services/supabase";
 import Sidebar from "./components/Sidebar";
-import Logo from "./components/Logo";
 
 export const links: LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
