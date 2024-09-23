@@ -28,9 +28,9 @@ export default function VideoDetailsComponent({
   const videoId = overview.id;
   const renderTitle = () => (
     <div>
-      <h1 className="text-xl font-semibold flex items-center mb-2">
+      <h2 className="text-xxl font-semibold flex items-center mb-4 mt-0">
         {overview?.title}
-      </h1>
+      </h2>
       <VideoPlayer videoId={overview.id} seekTo={seekTo} />
       <div className="flex items-center text-sm text-zinc-500 dark:text-zinc-400 space-x-4">
         <div className="flex items-center">

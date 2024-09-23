@@ -1,12 +1,11 @@
-import { useRef } from "react";
-import { useLoaderData, useParams } from "@remix-run/react";
+import { useLoaderData, useParams, useOutletContext } from "@remix-run/react";
 import type { LoaderFunction } from "@remix-run/node";
 import { useQuery } from "@tanstack/react-query";
-import Header from "~/components/Header";
 import { VideoProvider } from "~/context/VideoContext";
 import Chat from "~/components/Chat";
 import { Tables } from "~/types/supabase";
 import VideoDetails from "~/components/VideoDetails";
+import Logo from "~/components/Logo";
 
 type VideoData = Tables<"video">;
 type ChannelData = Tables<"channel">;
@@ -20,28 +19,14 @@ type OverviewData = {
 };
 
 // TODO: Implement server SSR when I have tome to refine SSR UX
-export const loader: LoaderFunction = async (/* { params, request } */) => {
-  // console.log({ params, request });
-  // const { videoId } = params;
-  // const url = new URL(request.url);
-  // const apiUrl = `${url.protocol}//${url.host}/api/overview?videoId=${videoId}`;
-
-  // const response = await fetch(apiUrl);
-  // if (!response.ok) {
-  //   throw new Response("Failed to fetch video data", {
-  //     status: response.status,
-  //   });
-  // }
-
-  // const data = await response.json();
-  // return json(data);
+export const loader: LoaderFunction = async () => {
   return null;
 };
 
 const ResultContent = () => {
   const { videoId } = useParams() as { videoId: string };
-  const mainContentRef = useRef<HTMLDivElement>(null);
   const loadedData = useLoaderData<OverviewData | null>();
+  const { isOpen } = useOutletContext<{ isOpen: boolean }>();
 
   const { data, isLoading } = useQuery<OverviewData, Error>({
     queryKey: ["overview", videoId],
@@ -53,20 +38,22 @@ const ResultContent = () => {
   const overviewData = loadedData || data;
 
   return (
-    <div className="flex flex-col h-screen">
-      <Header />
-      <div className="flex-grow overflow-y-auto" ref={mainContentRef}>
-        <main className="max-w-2xl mx-auto p-6">
-          {isLoading ? (
-            <div>Loading...</div>
-          ) : (
-            <>
-              {overviewData && <VideoDetails data={overviewData} />}
-              <Chat videoId={videoId} />
-            </>
-          )}
-        </main>
-      </div>
+    <div className="flex flex-col min-h-screen">
+      <header className="sticky top-0 bg-white dark:bg-zinc-900 z-10 p-4 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 flex-shrink-0">
+        <Logo size="base" />
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-grow max-w-2xl mx-auto p-6">
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : (
+          <>
+            {overviewData && <VideoDetails data={overviewData} />}
+            <Chat videoId={videoId} isOpen={isOpen} />
+          </>
+        )}
+      </main>
     </div>
   );
 };

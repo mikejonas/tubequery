@@ -13,6 +13,8 @@ import { useState, useEffect, useRef } from "react";
 
 import "./styles/tailwind.css";
 import { supabaseClient } from "./services/supabase";
+import Sidebar from "./components/Sidebar";
+import Logo from "./components/Logo";
 
 export const links: LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -38,13 +40,11 @@ export const loader: LoaderFunction = async () => {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useLoaderData<typeof loader>();
-  // const [theme, setTheme] = useState("dark");
   const signInAttempted = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedTheme = localStorage.getItem("theme") || "dark";
-      // setTheme(savedTheme);
       document.documentElement.classList.toggle("dark", savedTheme === "dark");
     }
 
@@ -66,28 +66,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
     signInAnonymously();
   }, []);
 
-  // const toggleTheme = () => {
-  //   const newTheme = theme === "light" ? "dark" : "light";
-  //   setTheme(newTheme);
-  //   localStorage.setItem("theme", newTheme);
-  //   document.documentElement.classList.toggle("dark", newTheme === "dark");
-  // };
-
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="h-full">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
-      <body className="bg-white dark:bg-zinc-900 text-black dark:text-white">
-        {/* <button
-          onClick={toggleTheme}
-          className="absolute top-4 right-4 p-2 bg-zinc-200 dark:bg-zinc-700 rounded"
-        >
-          {theme === "light" ? "🌙" : "☀️"}
-        </button> */}
+      <body className="h-full bg-white dark:bg-zinc-900 text-black dark:text-white">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -98,7 +85,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const [queryClient] = useState(() => new QueryClient());
+  const [isOpen, setIsOpen] = useState(false); // State to manage sidebar visibility
   const data = useLoaderData<typeof loader>();
+
+  // Function to toggle the sidebar open/close state
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -107,7 +100,14 @@ export default function App() {
           __html: `window.ENV = ${JSON.stringify(data.ENV)}`,
         }}
       />
-      <Outlet />
+      <div className="flex h-full">
+        <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
+        <div className="flex-grow flex flex-col">
+          <main className="flex-grow overflow-y-auto">
+            <Outlet context={{ isOpen }} />
+          </main>
+        </div>
+      </div>
     </QueryClientProvider>
   );
 }

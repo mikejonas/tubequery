@@ -6,7 +6,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteChatHistory, getChatHistory, postChat } from "~/api-calls/chat";
 import { ChatMessage } from "~/types/supabase-additional";
 
-export default function ChatComponent({ videoId }: { videoId: string }) {
+export default function ChatComponent({
+  videoId,
+  isOpen,
+}: {
+  videoId: string;
+  isOpen: boolean;
+}) {
   const queryClient = useQueryClient();
   const { data: chatHistory, refetch: refetchChatHistory } = useQuery({
     queryKey: ["chatHistory", videoId],
@@ -192,7 +198,11 @@ export default function ChatComponent({ videoId }: { videoId: string }) {
       <div className="pb-24">
         <div className="space-y-4">{renderChat()}</div>
       </div>
-      <div className="fixed bottom-0 left-0 right-0 pb-2 bg-white dark:bg-zinc-900 text-center">
+      <div
+        className={`fixed bottom-0 left-0 right-0 pb-2 bg-white dark:bg-zinc-900 text-center transition-all duration-300 ease-in-out ${
+          isOpen ? "ml-12" : "ml-0"
+        }`}
+      >
         <div className="max-w-2xl mx-auto">{renderChatInput()}</div>
         <div className="text-xs text-zinc-500">
           <button

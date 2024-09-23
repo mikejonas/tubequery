@@ -5,8 +5,8 @@ import { Input } from "~/components/ui/input";
 import { useNavigate } from "@remix-run/react";
 import { ArrowRight } from "lucide-react";
 import { extractVideoId } from "~/utils";
-import Header from "~/components/Header";
 import Footer from "~/components/Footer";
+import Logo from "~/components/Logo";
 
 export default function Index() {
   const [url, setUrl] = useState("");
@@ -31,17 +31,16 @@ export default function Index() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="max-w-2xl mx-auto w-full p-6 text-center">
-        <h1 className="text-3xl font-medium mb-6">
-          Summarize and Query YouTube Videos
-        </h1>
-        <p className="text-xl text-zinc-600 dark:text-zinc-400 mb-12">
-          Enter a YouTube URL to get started
-        </p>
+    <div className="flex flex-col min-h-screen bg-zinc-900 text-zinc-100">
+      {/* Sticky Header with Logo */}
+      <header className="sticky top-0 p-4 z-10">
+        <Logo size="base" />
+      </header>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Main Content */}
+      <main className="flex-grow mx-auto w-full p-6 flex flex-col items-center justify-center">
+        <h1 className="text-3xl mb-10">Summarize YouTube Videos</h1>
+        <form onSubmit={handleSubmit} className="relative max-w-xl w-full">
           <Input
             ref={inputRef}
             type="url"
@@ -49,18 +48,20 @@ export default function Index() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required
-            className="text-lg py-6 dark:bg-zinc-800 dark:text-white"
+            className="w-full pr-12 bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-400 rounded-lg h-12 text-sm"
           />
           <Button
             type="submit"
-            className="w-full py-6 text-lg dark:bg-zinc-200 dark:hover:bg-zinc-300"
+            className="absolute right-1 top-1 bottom-1 h-auto w-10 rounded-md bg-zinc-700 hover:bg-zinc-600"
+            disabled={!url.trim()}
           >
-            Generate Summary
-            <ArrowRight className="ml-2 w-5 h-5" />
+            <ArrowRight className="h-5 w-5 text-zinc-100" />
+            <span className="sr-only">Generate Summary</span>
           </Button>
         </form>
       </main>
 
+      {/* Footer */}
       <Footer />
     </div>
   );

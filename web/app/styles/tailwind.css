@@ -5,6 +5,9 @@
 html,
 body {
   @apply font-sans bg-white text-black;
+  height: 100%; /* Ensure the html and body take full height */
+  margin: 0;
+  overflow: hidden; /* Prevent overflow on the body */
 }
 
 .dark {
@@ -137,5 +140,4 @@ body {
   .markdown a {
     @apply text-blue-600 dark:text-blue-400 underline font-medium;
   }
-
 }
