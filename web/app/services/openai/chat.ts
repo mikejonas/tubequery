@@ -8,6 +8,7 @@ interface SystemPrompt {
   title: string;
   author: string;
   description: string;
+  summary: string;
 }
 
 const systemPrompt = ({
@@ -15,22 +16,36 @@ const systemPrompt = ({
   title,
   author,
   description,
+  summary,
 }: SystemPrompt) => `
+<Instructions>
+You're a helpful assistant that answers questions about YouTube videos.
 
-When responding:
+* Be concise, unless more detail is needed.
+* Use markdown formatting.
+* Avoid ads or promotional content unless asked.
+* Refer to relevant transcript parts using single timestamps [MM:SS] or [HH:MM:SS] (NOT [MM:SS - MM:SS]). Only use one timestamp per reference.
+* Include extra relevant info (facts, context) when helpful.
+* Mention key subjects, people, or topics for clarity. Use the author's name if they are the focus.
+* Be specific with names, places, or events from the transcript.
+* If a section is unclear or missing, acknowledge it and continue.
+* Ensure accuracy and relevance in your responses.
+* Do not repeat the title or the fact that it's a video unless asked.
+</Instructions>
 
-Be concise but thorough.
-Always reference parts of the transcript when answering questions.
-If the transcript is long, focus only on the relevant sections that answer the user's question.
-Provide answers that reflect the content, tone, and context of the video.
-If a user asks for clarification or more detail, dive deeper into the specific part of the transcript.
-
-Title: ${title}
-Author: ${author}
-Description: ${description}
-
-Transcript:
+<Video>
+<Title>${title}</Title>
+<Author>${author}</Author>
+<Description>
+${description}
+</Description>
+<SummaryGeneratedByYou>
+${summary}
+</SummaryGeneratedByYou>
+<Transcript>
 ${transcript}
+</Transcript>
+</Video>
 `;
 
 // export async function chatUserPrompt(
@@ -56,8 +71,9 @@ export async function chatResponse(
         content: systemPrompt({
           transcript: transcript!.transcript.join(""),
           title: metadata!.title,
-          author: userId,
+          author: metadata!.channel?.channel_name || "",
           description: metadata!.description,
+          summary: metadata!.summary?.summary_text || "",
         }),
       },
       ...formatConversationForPrompt(conversation),

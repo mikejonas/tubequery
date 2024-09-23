@@ -122,8 +122,8 @@ export default function ChatComponent({ videoId }: { videoId: string }) {
       return (
         <div key={index} className="space-y-2">
           <div className="pv-3 ">
-            <div className="text-message flex w-full flex-col items-end whitespace-normal break-words mb-8">
-              <div className="relative max-w-[70%] rounded-xl px-5 py-2.5 bg-[#f4f4f4] dark:bg-zinc-800">
+            <div className="flex w-full flex-col items-end whitespace-normal break-words mb-8">
+              <div className="text-sm relative max-w-[70%] rounded-xl px-5 py-2.5 bg-[#f4f4f4] dark:bg-zinc-800">
                 {item.content}
               </div>
             </div>

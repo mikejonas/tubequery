@@ -110,6 +110,14 @@ body {
     @apply pl-6 mb-4;
   }
 
+  .markdown ul {
+    @apply list-disc;
+  }
+
+  .markdown ol {
+    @apply list-decimal;
+  }
+
   .markdown li {
     @apply mb-2;
   }
@@ -130,7 +138,4 @@ body {
     @apply text-blue-600 dark:text-blue-400 underline font-medium;
   }
 
-  .markdown ul {
-    @apply pl-6 mb-4 list-disc;
-  }
 }
