@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LogOut, Menu } from "lucide-react";
+import { LogOut, Menu, PenSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getActivityHistory } from "~/api-calls/activity";
 
@@ -82,12 +82,22 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
         </nav>
       </div>
 
-      <button
-        className="fixed top-2 left-2 p-2 z-40 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
-        onClick={toggleSidebar}
-      >
-        <Menu className="w-6 h-6" />
-      </button>
+      <div className="fixed top-2 left-2 z-40 flex items-center ">
+        <button
+          className="p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
+          onClick={toggleSidebar}
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        {location.pathname !== "/" && (
+          <Link
+            to="/"
+            className="p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
+          >
+            <PenSquare className="w-5 h-5" />
+          </Link>
+        )}
+      </div>
     </>
   );
 }
