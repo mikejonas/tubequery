@@ -32,3 +32,15 @@ export async function getChatHistory(videoId: string) {
 
   return response.data;
 }
+
+export async function deleteChatHistory(videoId: string) {
+  console.log("Deleting chat history for videoId", videoId);
+  const { error } = await supabaseClient
+    .from("chat")
+    .delete()
+    .eq("video_id", videoId);
+  if (error) {
+    console.error("Error deleting chat history", error);
+  }
+  return [];
+}
